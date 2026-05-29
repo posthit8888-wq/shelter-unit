@@ -16,6 +16,50 @@
     const app = initializeApp(firebaseConfig);
     window.db = getDatabase(app);
 </script>
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+    import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyAzEjnXzlahG1ZREB124qTviWGxHgK1_34",
+        authDomain: "shelter-unit.firebaseapp.com",
+        databaseURL: "https://shelter-unit-default-rtdb.firebaseio.com",
+        projectId: "shelter-unit",
+        storageBucket: "shelter-unit.firebasestorage.app",
+        messagingSenderId: "664482632720",
+        appId: "1:664482632720:web:70e35cc87de477af02a695",
+        measurementId: "G-F765PMNPZE"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // 1. 메시지 보내기 함수
+    window.sendChatMessage = function() {
+        const input = document.getElementById('chat-input');
+        const text = input.value.trim();
+        if (!text) return;
+
+        push(ref(db, 'chat'), {
+            username: "사용자", 
+            text: text,
+            timestamp: Date.now()
+        });
+        input.value = '';
+    };
+
+    // 2. 메시지 실시간 불러오기
+    onChildAdded(ref(db, 'chat'), (snapshot) => {
+        const data = snapshot.val();
+        const chatBox = document.getElementById('chat-box');
+        if (chatBox) {
+            const msgDiv = document.createElement('div');
+            msgDiv.innerHTML = `<strong>${data.username}:</strong> ${data.text}`;
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    });
+</script>
 
 <!DOCTYPE html>
 <html lang="ko">
