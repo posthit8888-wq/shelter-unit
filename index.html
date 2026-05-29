@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>대피소 부대</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #1b2735 0%, #090a0f 100%);
+            font-family: 'Noto Sans KR', sans-serif;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .space {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.8;
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-20px); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(105vh); opacity: 0; }
+        }
+
+        /* 오른쪽 상단 프로필 구역 */
+        .profile-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            display: none;
+        }
+
+        .profile-badge {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 16px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .profile-badge:hover {
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+        }
+
+        .profile-img {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background-color: #5865F2;
+            border: 2px solid #00ffcc;
+        }
+
+        .profile-name {
+            font-weight: bold;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+        }
+
+        /* 프로필 드롭다운 메뉴 */
+        .profile-dropdown {
+            position: absolute;
+            top: 55px;
+            right: 0;
+            background: #111424;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            width: 160px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .dropdown-item {
+            background: transparent;
+            border: none;
+            color: #b9bbbe;
+            padding: 12px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: left;
+            width: 100%;
+            transition: all 0.2s ease;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+        }
+
+        .dropdown-item.logout {
+            color: #ff4757;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .dropdown-item.logout:hover {
+            background: rgba(255, 71, 87, 0.1);
+        }
+
+        /* 🏆 오른쪽 슬라이드인 리더보드 메뉴 스타일 */
+        .leaderboard-sidebar {
+            position: fixed;
+            top: 0;
+            right: -380px;
+            width: 340px;
+            height: 100%;
+            background: linear-gradient(135deg, #111625 0%, #070913 100%);
+            border-left: 2px solid rgba(0, 255, 204, 0.2);
+            box-shadow: -10px 0 30px rgba(0,0,0,0.7);
+            z-index: 200;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            transition: right 0.4s cubic-bezier(0.1, 0.9, 0.2, 1);
+        }
+
+        .leaderboard-sidebar.open {
+            right: 0;
+        }
+
+        .leaderboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 15px;
+        }
+
+        .leaderboard-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: #00ffcc;
+            text-shadow: 0 0 10px rgba(0,255,204,0.3);
+        }
+
+        .close-btn {
+            background: transparent;
+            border: none;
+            color: #ff4757;
+            font-size: 1.5rem;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .tab-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #b9bbbe;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .tab-btn.active {
+            background: rgba(0, 255, 204, 0.15);
+            color: #00ffcc;
+            border-color: #00ffcc;
+            box-shadow: 0 0 10px rgba(0,255,204,0.2);
+        }
+
+        .rank-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-right: 5px;
+        }
+
+        .rank-item {
+            display: flex;
+            align-items: center;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 12px;
+            border-radius: 10px;
+            gap: 12px;
+        }
+
+        .rank-item.my-rank {
+            background: rgba(255, 0, 127, 0.08) !important;
+            border-color: rgba(255, 0, 127, 0.4) !important;
+        }
+
+        .rank-number {
+            font-size: 1.1rem;
+            font-weight: bold;
+            width: 25px;
+            text-align: center;
+            color: #ffd700;
+        }
+
+        .rank-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .rank-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .rank-username {
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .rank-count {
+            font-size: 0.8rem;
+            color: #00ffcc;
+            font-weight: bold;
+        }
+
+        /* 💬 왼쪽 고정 채팅 열기 버튼 */
+        .chat-toggle-btn {
+            position: fixed;
+            left: 20px;
+            bottom: 20px;
+            z-index: 150;
+            width: 60px;
+            height: 60px;
+            background: #5865F2;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(88, 101, 242, 0.4);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .chat-toggle-btn:hover {
+            transform: scale(1.1) rotate(-5deg);
+            background: #4752C4;
+            box-shadow: 0 0 20px rgba(88, 101, 242, 0.7);
+        }
+
+        .chat-toggle-btn svg {
+            width: 28px;
+            height: 28px;
+            fill: white;
+        }
+
+        /* 💬 왼쪽 슬라이드인 채팅창 스타일 */
+        .chat-sidebar {
+            position: fixed;
+            top: 0;
+            left: -400px;
+            width: 360px;
+            height: 100%;
+            background: linear-gradient(135deg, #0f111a 0%, #171a2b 100%);
+            border-right: 2px solid rgba(88, 101, 242, 0.3);
+            box-shadow: 10px 0 30px rgba(0,0,0,0.6);
+            z-index: 210;
+            display: flex;
+            flex-direction: column;
+            transition: left 0.4s cubic-bezier(0.1, 0.9, 0.2, 1);
+        }
+
+        .chat-sidebar.open {
+            left: 0;
+        }
+
+        .chat-header {
+            padding: 20px;
+            background: rgba(88, 101, 242, 0.1);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: #5865F2;
+            text-shadow: 0 0 10px rgba(88,101,242,0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* 채팅 메시지 내역 구역 */
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: rgba(88, 101, 242, 0.3);
+            border-radius: 4px;
+        }
+
+        /* 말풍선 공통 스타일 */
+        .msg-wrapper {
+            display: flex;
+            gap: 10px;
+            max-width: 85%;
+        }
+
+        .msg-wrapper.me {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .msg-wrapper.other {
+            align-self: flex-start;
+        }
+
+        .msg-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .msg-container {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .msg-author {
+            font-size: 0.75rem;
+            color: #b9bbbe;
+            font-weight: bold;
+        }
+        .msg-wrapper.me .msg-author {
+            text-align: right;
+        }
+
+        .msg-bubble {
+            padding: 10px 14px;
+            border-radius: 14px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            word-break: break-all;
+        }
+
+        .msg-wrapper.me .msg-bubble {
+            background: #5865F2;
+            color: white;
+            border-top-right-radius: 2px;
+        }
+
+        .msg-wrapper.other .msg-bubble {
+            background: rgba(255,255,255,0.08);
+            color: #e3e5e8;
+            border-top-left-radius: 2px;
+        }
+
+        /* 채팅 입력 하단 구역 */
+        .chat-input-area {
+            padding: 15px 20px;
+            background: #0b0c16;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 10px 16px;
+            color: white;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        .chat-input:focus {
+            border-color: #5865F2;
+        }
+
+        .chat-send-btn {
+            background: #5865F2;
+            border: none;
+            color: white;
+            font-weight: bold;
+            padding: 0 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .chat-send-btn:hover {
+            background: #4752C4;
+        }
+
+        .container {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 2rem;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+            letter-spacing: 3px;
+            font-weight: 700;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .dev-btn-subgroup {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 15px 35px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: white;
+            border: 2px solid white;
+            border-radius: 30px;
+            background: transparent;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-discord {
+            border-color: #5865F2;
+            background-color: rgba(88, 101, 242, 0.1);
+        }
+        .btn-discord:hover {
+            background-color: #5865F2;
+            box-shadow: 0 0 20px rgba(88, 101, 242, 0.6);
+        }
+
+        .btn-login {
+            border-color: #5865F2;
+            background-color: rgba(88, 101, 242, 0.3);
+        }
+        .btn-login:hover {
+            background-color: #4752C4;
+            box-shadow: 0 0 20px rgba(88, 101, 242, 0.8);
+        }
+
+        .btn-game {
+            border-color: #00ffcc;
+            background-color: rgba(0, 255, 204, 0.1);
+        }
+        .btn-game:hover {
+            background-color: #00ffcc;
+            color: #090a0f;
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.6);
+        }
+
+        .btn-dev {
+            border-color: #ff007f;
+            background-color: rgba(255, 0, 127, 0.1);
+        }
+        .btn-dev:hover {
+            background-color: #ff007f;
+            box-shadow: 0 0 20px rgba(255, 0, 127, 0.6);
+        }
+
+        .btn-site-dev {
+            border-color: #00ffcc;
+            background-color: rgba(0, 255, 204, 0.1);
+        }
+        .btn-site-dev:hover {
+            background-color: #00ffcc;
+            color: #090a0f;
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.6);
+        }
+
+        .dev-wrapper {
+            display: none;
+        }
+
+        .login-info-text {
+            margin-top: 15px;
+            font-size: 0.95rem;
+            color: #b9bbbe;
+            letter-spacing: 1px;
+        }
+
+        .login-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* 🛠️ 커스텀 개발자 모달창 스타일 */
+        .dev-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .dev-modal-overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .dev-modal {
+            background: linear-gradient(135deg, #121629 0%, #0a0c16 100%);
+            border: 2px solid #ff007f;
+            border-radius: 20px;
+            width: 360px;
+            padding: 30px 20px;
+            box-shadow: 0 0 30px rgba(255, 0, 127, 0.4);
+            text-align: center;
+            transform: scale(0.8);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .dev-modal.site-style {
+            border-color: #00ffcc !important;
+            box-shadow: 0 0 30px rgba(0, 255, 204, 0.4) !important;
+        }
+
+        .dev-modal-overlay.show .dev-modal {
+            transform: scale(1);
+        }
+
+        .dev-modal h3 {
+            margin-top: 0;
+            color: #ff007f;
+            font-size: 1.4rem;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px rgba(255, 0, 127, 0.3);
+        }
+
+        .dev-modal.site-style h3 {
+            color: #00ffcc !important;
+            text-shadow: 0 0 10px rgba(0, 255, 204, 0.3) !important;
+        }
+
+        .dev-names {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 15px;
+            margin: 20px 0;
+            font-size: 1.1rem;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            line-height: 1.6;
+        }
+
+        .dev-modal-close {
+            background: #ff007f;
+            border: none;
+            color: white;
+            font-weight: bold;
+            padding: 10px 30px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 10px rgba(255, 0, 127, 0.3);
+        }
+
+        .dev-modal.site-style .dev-modal-close {
+            background: #00ffcc !important;
+            color: #090a0f !important;
+            box-shadow: 0 4px 10px rgba(0, 255, 204, 0.3) !important;
+        }
+
+        .dev-modal-close:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="space" id="space"></div>
+
+    <div class="dev-modal-overlay" id="dev-modal-overlay" onclick="closeDevModal()">
+        <div class="dev-modal" id="dev-modal-content" onclick="event.stopPropagation()">
+            <h3 id="modal-title">🛠️ 개발자 정보</h3>
+            <div class="dev-names" id="modal-body">
+                dr_heo, KORIA151<br>
+                <span style="color:#00ffcc; font-size:0.9rem; font-weight:normal;">공동개발</span>
+            </div>
+            <button class="dev-modal-close" onclick="closeDevModal()">닫기</button>
+        </div>
+    </div>
+
+    <button class="chat-toggle-btn" id="chat-toggle-btn" onclick="openChat(event)">
+        <svg viewBox="0 0 24 24">
+            <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/>
+        </svg>
+    </button>
+
+    <div class="chat-sidebar" id="chat-sidebar">
+        <div class="chat-header">
+            <h3>💬 부대 실시간 대피소</h3>
+            <button class="close-btn" onclick="closeChat()">×</button>
+        </div>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input-area">
+            <input type="text" class="chat-input" id="chat-input" placeholder="메시지를 입력하세요..." onkeypress="handleChatKey(event)">
+            <button class="chat-send-btn" onclick="sendChatMessage()">전송</button>
+        </div>
+    </div>
+
+    <div class="profile-container" id="profile-container">
+        <div class="profile-badge" onclick="toggleDropdown(event)">
+            <img src="" alt="프로필" class="profile-img" id="profile-img">
+            <span class="profile-name" id="profile-name">사용자</span>
+        </div>
+        <div class="profile-dropdown" id="profile-dropdown">
+            <button class="dropdown-item" onclick="openLeaderboard()">🏆 리더보드 보기</button>
+            <button class="dropdown-item logout" onclick="logout()">🚪 로그아웃</button>
+        </div>
+    </div>
+
+    <div class="leaderboard-sidebar" id="leaderboard-sidebar">
+        <div class="leaderboard-header">
+            <h2>🏆 리더보드</h2>
+            <button class="close-btn" onclick="closeLeaderboard()">×</button>
+        </div>
+        <div class="tab-group">
+            <button class="tab-btn active" id="tab-game" onclick="switchTab('game')">🎮 게임 들어간 수</button>
+            <button class="tab-btn" id="tab-site" onclick="switchTab('site')">🌐 사이트 입장 수</button>
+        </div>
+        <div class="rank-list" id="rank-list" data-tab="game"></div>
+    </div>
+
+    <div class="container">
+        <h1>대피소 부대</h1>
+        <div class="btn-group">
+            <a href="https://discord.gg/es8dHcvN" target="_blank" class="btn btn-discord">디스코드 서버</a>
+            <div id="login-section" class="login-box">
+                <a href="https://discord.com/oauth2/authorize?client_id=1509154707447484446&response_type=token&redirect_uri=https%3A%2F%2Fshelterunit.netlify.app&scope=identify" 
+                   id="login-btn" 
+                   class="btn btn-login">디스코드 로그인</a>
+                <div class="login-info-text" id="login-hint">로그인을 하면 더 많은 정보가 나옵니다</div>
+            </div>
+            
+            <div class="dev-wrapper" id="dev-wrapper-box">
+                <div class="dev-btn-subgroup">
+                    <button onclick="openDevModal('game')" class="btn btn-dev">개발자 정보</button>
+                    <button onclick="openDevModal('site')" class="btn btn-site-dev">사이트 개발자</button>
+                </div>
+            </div>
+
+            <button onclick="showInfo()" class="btn btn-game">게임 설명</button>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let currentTab = 'game';
+
+        function updateSiteVisitCount() {
+            let visits = localStorage.getItem('site_visit_count');
+            if (!visits) {
+                visits = 1;
+            } else {
+                visits = parseInt(visits) + 1;
+            }
+            localStorage.setItem('site_visit_count', visits);
+            return visits;
+        }
+
+        const space = document.getElementById('space');
+        const starCount = 40;
+        for (let i = 0; i < starCount; i++) {
+            const star = document.createElement('div');
+            star.classList.add('star');
+            const size = Math.random() * 3 + 1;
+            star.style.width = `${size}px`;
+            star.style.height = `${size}px`;
+            star.style.left = `${Math.random() * 100}vw`;
+            const duration = Math.random() * 5 + 4;
+            star.style.animationDuration = `${duration}s`;
+            const delay = Math.random() * 5;
+            star.style.animationDelay = `-${delay}s`;
+            space.appendChild(star);
+        }
+
+        function showInfo() { alert('테스트'); }
+        
+        function openDevModal(type) {
+            const overlay = document.getElementById('dev-modal-overlay');
+            const modalContent = document.getElementById('dev-modal-content');
+            const title = document.getElementById('modal-title');
+            const body = document.getElementById('modal-body');
+
+            if(type === 'site') {
+                modalContent.classList.add('site-style');
+                title.innerHTML = '🌐 사이트 개발자 정보';
+                body.innerHTML = `dhlwadhw.12 사이트개발자`;
+            } else {
+                modalContent.classList.remove('site-style');
+                title.innerHTML = '🛠️ 개발자 정보';
+                body.innerHTML = `dr_heo, KORIA151<br><span style="color:#00ffcc; font-size:0.9rem; font-weight:normal;">공동개발</span>`;
+            }
+
+            overlay.style.display = 'flex';
+            setTimeout(() => {
+                overlay.classList.add('show');
+            }, 10);
+        }
+
+        function closeDevModal() {
+            const overlay = document.getElementById('dev-modal-overlay');
+            overlay.classList.remove('show');
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 300);
+        }
+
+        function toggleDropdown(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('profile-dropdown');
+            dropdown.style.display = dropdown.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        function openChat(event) {
+            event.stopPropagation();
+            document.getElementById('chat-sidebar').classList.add('open');
+            closeLeaderboard();
+        }
+
+        function closeChat() {
+            document.getElementById('chat-sidebar').classList.remove('open');
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text || !currentUser) return;
+
+            const chatMessagesContainer = document.getElementById('chat-messages');
+            const myAvatar = currentUser.avatar 
+                ? `https://cdn.discordapp.com/avatars/${currentUser.id}/${currentUser.avatar}.png`
+                : 'https://cdn.discordapp.com/embed/avatars/0.png';
+
+            const msgWrapper = document.createElement('div');
+            msgWrapper.className = 'msg-wrapper me';
+
+            msgWrapper.innerHTML = `
+                <img src="${myAvatar}" class="msg-avatar">
+                <div class="msg-container">
+                    <div class="msg-author">${currentUser.username}</div>
+                    <div class="msg-bubble">${text}</div>
+                </div>
+            `;
+
+            chatMessagesContainer.appendChild(msgWrapper);
+            input.value = '';
+            chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+        }
+
+        function handleChatKey(event) {
+            if (event.key === 'Enter') {
+                sendChatMessage();
+            }
+        }
+
+        window.addEventListener('click', (e) => {
+            document.getElementById('profile-dropdown').style.display = 'none';
+            const leadSidebar = document.getElementById('leaderboard-sidebar');
+            const chatSidebar = document.getElementById('chat-sidebar');
+            const profileContainer = document.getElementById('profile-container');
+            const chatToggleBtn = document.getElementById('chat-toggle-btn');
+
+            if (!leadSidebar.contains(e.target) && !profileContainer.contains(e.target) && leadSidebar.classList.contains('open')) {
+                closeLeaderboard();
+            }
+            if (!chatSidebar.contains(e.target) && !chatToggleBtn.contains(e.target) && chatSidebar.classList.contains('open')) {
+                closeChat();
+            }
+        });
+
+        function openLeaderboard() {
+            document.getElementById('leaderboard-sidebar').classList.add('open');
+            closeChat();
+            renderLeaderboard();
+        }
+
+        function closeLeaderboard() {
+            document.getElementById('leaderboard-sidebar').classList.remove('open');
+        }
+
+        function switchTab(tabType) {
+            currentTab = tabType;
+            document.getElementById('rank-list').setAttribute('data-tab', tabType);
+            document.getElementById('tab-game').classList.toggle('active', tabType === 'game');
+            document.getElementById('tab-site').classList.toggle('active', tabType === 'site');
+            renderLeaderboard();
+        }
+
+        function renderLeaderboard() {
+            const rankListContainer = document.getElementById('rank-list');
+            rankListContainer.innerHTML = '';
+            if (!currentUser) return;
+
+            const myAvatar = currentUser.avatar 
+                ? `https://cdn.discordapp.com/avatars/${currentUser.id}/${currentUser.avatar}.png`
+                : 'https://cdn.discordapp.com/embed/avatars/0.png';
+
+            const actualVisits = localStorage.getItem('site_visit_count') || 1;
+
+            const dataPool = [{
+                id: currentUser.id,
+                username: currentUser.username,
+                avatar: myAvatar,
+                count: currentTab === 'game' ? 0 : parseInt(actualVisits),
+                isMe: true
+            }];
+
+            dataPool.forEach((item, index) => {
+                const rankItem = document.createElement('div');
+                rankItem.className = `rank-item my-rank`;
+                rankItem.innerHTML = `
+                    <div class="rank-number">1</div>
+                    <img src="${item.avatar}" alt="프사" class="rank-avatar">
+                    <div class="rank-info">
+                        <div class="rank-username">${item.username} (나)</div>
+                        <div class="rank-count">${currentTab === 'game' ? '🎮 게임 입장: ' : '🌐 사이트 방문: '}${item.count}회</div>
+                    </div>
+                `;
+                rankListContainer.appendChild(rankItem);
+            });
+        }
+
+        function logout() {
+            localStorage.removeItem('stored_discord_token');
+            localStorage.removeItem('stored_discord_user');
+            alert('로그아웃 되었습니다.');
+            window.location.href = "/";
+        }
+
+        function fetchDiscordUserInfo(token) {
+            fetch('https://discord.com/api/users/@me', {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            .then(res => res.json())
+            .then(user => {
+                if (user.username) {
+                    currentUser = user;
+                    localStorage.setItem('stored_discord_user', JSON.stringify(user));
+                    renderProfileUI(user);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                logout();
+            });
+        }
+
+        function renderProfileUI(user) {
+            currentUser = user;
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('dev-wrapper-box').style.display = 'block';
+            document.getElementById('chat-toggle-btn').style.display = 'flex';
+
+            const avatarUrl = user.avatar 
+                ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`
+                : 'https://cdn.discordapp.com/embed/avatars/0.png';
+                
+            document.getElementById('profile-img').src = avatarUrl;
+            document.getElementById('profile-name').innerText = user.username;
+            document.getElementById('profile-container').style.display = 'block';
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            updateSiteVisitCount();
+            const hash = window.location.hash;
+            
+            if (hash.includes('access_token')) {
+                const params = new URLSearchParams(hash.replace('#', '?'));
+                const token = params.get('access_token');
+                if (token) {
+                    localStorage.setItem('stored_discord_token', token);
+                    fetchDiscordUserInfo(token);
+                    window.history.replaceState({}, document.title, "/");
+                    return;
+                }
+            }
+
+            const savedToken = localStorage.getItem('stored_discord_token');
+            const savedUser = localStorage.getItem('stored_discord_user');
+
+            if (savedToken && savedUser) {
+                currentUser = JSON.stringify(savedUser).startsWith('{') ? JSON.parse(savedUser) : savedUser;
+                renderProfileUI(currentUser);
+                fetchDiscordUserInfo(savedToken);
+            } else {
+                document.getElementById('login-section').style.display = 'flex';
+                document.getElementById('dev-wrapper-box').style.display = 'none';
+                document.getElementById('profile-container').style.display = 'none';
+                document.getElementById('chat-toggle-btn').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
+</html>
