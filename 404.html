@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script>
+        // 404 페이지로 들어왔지만 주소창에 토큰이 있다면 처리합니다.
+        const hash = window.location.hash.substring(1);
+        if (hash.includes('access_token')) {
+            // 메인 페이지(index.html)로 이동하면서 토큰을 그대로 가져갑니다.
+            window.location.replace('/shelter-unit/' + window.location.hash);
+        } else {
+            document.body.innerHTML = "<h1>404 - 페이지를 찾을 수 없습니다.</h1>";
+        }
+    </script>
+</head>
+<body></body>
+</html>
